@@ -1,0 +1,41 @@
+image: alpine/3.17
+packages:
+  - poetry
+  - python3-dev
+secrets:
+  - 3ecea679-dec7-4ac0-8821-75d0f4fe0773
+  - dc710d9d-8043-4e1d-9837-b35bfa02800a
+artifacts:
+  - ./docs.tar.gz
+  - ./package.tar
+tasks:
+  - install: |
+      cd matridge
+      poetry install
+      poetry run c3p0 matridge
+      poetry run set_version
+      poetry build
+      tar cvf ~/package.tar dist/*
+  - tests: |
+      cd matridge
+      poetry run ruff .
+      poetry run mypy .
+      poetry run pytest tests
+      poetry run black --check .
+      poetry run isort --check .
+  - docs: |
+      cd matridge/docs
+      make html
+      cd build/html
+      tar cvzf ~/docs.tar.gz .
+  - publish: |
+      if [ -z "$PYPI" ]; then
+        exit
+      fi
+
+      set +x
+      export POETRY_PYPI_TOKEN_PYPI=$(cat ~/.pypi-token)
+      set -x
+
+      cd $PROJECT
+      poetry publish

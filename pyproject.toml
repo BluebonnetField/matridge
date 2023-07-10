@@ -1,0 +1,63 @@
+[tool.poetry]
+name = "Matridge"
+version = "0.0.0-dev0"
+description = ""
+authors = ["Nicoco <nicoco@nicoco.fr>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+matrix-nio = {extras = ["e2e"], version = "^0.20.2"}
+beautifulsoup4 = "^4.12.2"
+
+[tool.poetry.dependencies.slidge]
+git = "https://git.sr.ht/~nicoco/slidge"
+branch = "master"
+
+[tool.poetry.group.dev.dependencies]
+xmldiff = "^2.6.3"
+pytest = "^7.4.0"
+types-beautifulsoup4 = "^4.12.0.5"
+black = {extras = ["d"], version = "^23.3.0"}
+pytest-asyncio = "^0.21.0"
+pre-commit = "^3.3.3"
+ruff = "^0.0.277"
+mypy = "^1.4.1"
+isort = "^5.12.0"
+
+[tool.poetry.group.dev.dependencies.slidge-dev-helpers]
+git = "https://git.sr.ht/~nicoco/slidge-dev-helpers"
+branch = "master"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+matridge = "matridge.__main__:main"
+
+[tool.mypy]
+files = ["matridge"]
+exclude = [
+    "tests",
+]
+check_untyped_defs = true
+strict = false
+
+[[tool.mypy.overrides]]
+module = [
+    "nio.*",
+]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 120
+exclude = [
+    "tests",
+]
+
+[tool.isort]
+profile = "black"
+skip = [
+    "tests",
+]
