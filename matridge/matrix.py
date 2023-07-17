@@ -45,6 +45,8 @@ class AuthenticationClient(nio.AsyncClient):
     def __init__(
         self, server: str, handle: str, jid: JID, log: Optional[logging.Logger] = None
     ):
+        if not server.startswith("http"):
+            server = "https://" + server
         super().__init__(server, handle)
         self._storage = config.HOME_DIR / jid.bare
         if log:
