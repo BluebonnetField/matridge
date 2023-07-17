@@ -53,6 +53,10 @@ class MUC(LegacyMUC[str, str, Participant, str]):
 
         if new := room.replacement_room:
             raise XMPPError("redirect", f"{new}")
+        self.log.debug("Children: %s", room.children)
+        if room.children:
+            raise XMPPError("bad-request", "This is not a real room but a 'space'")
+
         self.user_nick = room.user_name(self.session.matrix.user_id)
 
         # workaround for weird bug where user participant doesn't have code=110
