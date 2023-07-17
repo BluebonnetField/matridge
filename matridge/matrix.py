@@ -8,6 +8,7 @@ import nio
 from slidge.core import config
 from slidge.util.types import LegacyAttachment
 from slixmpp import JID
+from slixmpp.exceptions import XMPPError
 
 from .reactions import ReactionCache
 from .util import server_timestamp_to_datetime
@@ -26,6 +27,10 @@ def catch_all(coro: Callable[["Client", nio.MatrixRoom, nio.Event], Awaitable[No
             return
         try:
             return await coro(self, room, event, *a, **kw)
+        except XMPPError as e:
+            self.log.debug(
+                "Exception raised in matrix client callback %s", coro, exc_info=e
+            )
         except Exception as e:
             self.log.exception(
                 "Exception raised in matrix client callback %s", coro, exc_info=e
