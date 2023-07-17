@@ -81,7 +81,17 @@ class AuthenticationClient(nio.AsyncClient):
 
     async def login_token(self):
         self.load()
+        await self.fix_homeserver()
         self.log.debug("Token %s", self.access_token)
+
+    async def fix_homeserver(self):
+        """
+        Uses https://$HOMESERVER/.well-known/matrix/client to fix the homeserver
+        URL.
+        """
+        response = await self.discovery_info()
+        if isinstance(response, nio.DiscoveryInfoResponse):
+            self.homeserver = response.homeserver_url
 
 
 class Client(AuthenticationClient):

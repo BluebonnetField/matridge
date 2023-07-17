@@ -39,11 +39,13 @@ class Gateway(BaseGateway):
             registration_form["username"],  # type:ignore
             user_jid,
         )
+        await client.fix_homeserver()
         resp = await client.login(
             registration_form["password"],  # type:ignore
             registration_form["device"],  # type:ignore
         )
         if isinstance(resp, LoginError):
+            log.debug("Failed login: %r", resp)
             raise PermissionError(resp)
         client.save(resp)
 
