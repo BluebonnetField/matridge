@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from nio.responses import LoginError
-from slidge import BaseGateway, FormField, GatewayUser
+from slidge import BaseGateway, FormField, GatewayUser, global_config
 from slixmpp import JID
 
 from .matrix import AuthenticationClient
@@ -13,7 +13,12 @@ class Gateway(BaseGateway):
         FormField(var="homeserver", label="Home Server", required=True),
         FormField(var="username", label="User name", required=True),
         FormField(var="password", label="Password", required=True, private=True),
-        FormField(var="device", label="Device name", value="matridge", required=True),
+        FormField(
+            var="device",
+            label="Device name",
+            value=f"matridge on {getattr(global_config, 'JID', 'dev')}",
+            required=True,
+        ),
     ]
     REGISTRATION_INSTRUCTIONS: str = "Enter your credentials"
 
