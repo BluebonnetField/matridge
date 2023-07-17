@@ -58,7 +58,7 @@ class Gateway(BaseGateway):
         session = self.get_session_from_user(user)
         resp = await session.matrix.logout()  # type: ignore
         log.debug("Logout response: %s", resp)
-        session.matrix.delete_token()  # type: ignore
+        session.matrix.destroy()  # type: ignore
 
 
 log = logging.getLogger(__name__)

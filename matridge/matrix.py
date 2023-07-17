@@ -1,5 +1,6 @@
 import json
 import logging
+import shutil
 from asyncio import Task
 from functools import wraps
 from typing import TYPE_CHECKING, Awaitable, Callable, Optional, TypedDict, Union
@@ -52,8 +53,16 @@ class AuthenticationClient(nio.AsyncClient):
     ):
         if not server.startswith("http"):
             server = "https://" + server
-        super().__init__(server, handle)
         self._storage = config.HOME_DIR / jid.bare
+        self.store_path = store_path = config.HOME_DIR / (jid.bare + "_state")
+        store_path.mkdir(exist_ok=True)
+        cfg = nio.AsyncClientConfig(
+            store_sync_tokens=True,
+            max_limit_exceeded=0,
+            max_timeouts=0,
+            encryption_enabled=True,
+        )
+        super().__init__(server, handle, store_path=str(store_path), config=cfg)
         if log:
             self.log = log
         else:
@@ -78,15 +87,17 @@ class AuthenticationClient(nio.AsyncClient):
         self.user_id = stored["user_id"]
         self.device_id = stored["device_id"]
 
-    def delete_token(self):
+    def destroy(self):
         try:
             self._storage.unlink()
+            shutil.rmtree(self.store_path)
         except FileNotFoundError:
-            self.log.error("Could not delete token from disk", exc_info=True)
+            self.log.error("Could not delete persistent data from disk", exc_info=True)
 
     async def login_token(self):
         self.load()
         await self.fix_homeserver()
+        self.load_store()
         self.log.debug("Token %s", self.access_token)
 
     async def fix_homeserver(self):
@@ -138,7 +149,8 @@ class Client(AuthenticationClient):
         return await muc.get_participant_by_legacy_id(event.sender)
 
     async def listen(self):
-        resp = await self.sync()
+        # we need to sync full state or else we don't get the list of all rooms
+        resp = await self.sync(full_state=True)
         self.log.debug("Sync: %s", resp)
         if isinstance(resp, nio.SyncError):
             raise PermissionError(resp)
