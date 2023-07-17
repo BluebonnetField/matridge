@@ -2,7 +2,7 @@ import json
 import logging
 from asyncio import Task
 from functools import wraps
-from typing import TYPE_CHECKING, Awaitable, Callable, Optional, TypedDict
+from typing import TYPE_CHECKING, Awaitable, Callable, Optional, TypedDict, Union
 
 import nio
 from slidge.core import config
@@ -116,8 +116,9 @@ class Client(AuthenticationClient):
             self.on_typing, nio.TypingNoticeEvent  # type:ignore
         )
 
-    async def __get_muc(self, room: nio.MatrixRoom) -> "MUC":
-        return await self.session.bookmarks.by_legacy_id(room.room_id)
+    async def __get_muc(self, room: Union[nio.MatrixRoom, str]) -> "MUC":
+        room_id = room.room_id if isinstance(room, nio.MatrixRoom) else room
+        return await self.session.bookmarks.by_legacy_id(room_id)
 
     async def get_participant(
         self, room: nio.MatrixRoom, event: nio.Event
