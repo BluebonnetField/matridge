@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-matrix-nio = {extras = ["e2e"], version = "^0.20.2"}
+matrix-nio = {extras = ["e2e"], version = "^0.21"}
 beautifulsoup4 = "^4.12.2"
 
 [tool.poetry.dependencies.slidge]
