@@ -194,6 +194,8 @@ class Client(AuthenticationClient):
         await participant.send_matrix_message(event)
 
     async def on_presence(self, presence: nio.PresenceEvent):
+        if presence.user_id == self.session.contacts.user_legacy_id:
+            return
         contact = await self.session.contacts.by_legacy_id(presence.user_id)
         contact.update_presence(presence)
 
