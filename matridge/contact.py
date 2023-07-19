@@ -59,3 +59,13 @@ class Contact(LegacyContact[str]):
 
 class Roster(LegacyRoster[str, Contact]):
     session: "Session"
+
+    async def jid_username_to_legacy_id(self, jid_username: str):
+        u = await super().jid_username_to_legacy_id(jid_username)
+        if not u.startswith("@"):
+            raise XMPPError(
+                "bad-request",
+                f"'{jid_username}' is not a valid matrix username. "
+                "Matrix usernames starts with @",
+            )
+        return u
