@@ -88,16 +88,29 @@ class MUC(LegacyMUC[str, str, Participant, str]):
         else:
             self.log.debug("Do not wait for members to be synced anymore")
 
-        for user_id, user in list(room.users.items())[: config.MAX_PARTICIPANTS_FETCH]:
+        power_levels = room.power_levels.users
+        i = 0
+        for user_id, user in list(room.users.items()):
             if user_id == self.session.matrix.user_id:
                 self.log.debug(
                     "Skipping: %s %s", user.user_id, self.session.matrix.user_id
                 )
                 continue
+            power_level = power_levels.get(user_id, 0)
+            if power_level < 50 and i > config.MAX_PARTICIPANTS_FETCH:
+                continue
             try:
-                await self.get_participant_by_legacy_id(user.user_id)
+                p = await self.get_participant_by_legacy_id(user.user_id)
             except XMPPError:
                 continue
+            if power_level == 100:
+                p.affiliation = "owner"
+                p.role = "moderator"
+            elif power_level >= 50:
+                p.affiliation = "admin"
+                p.role = "moderator"
+            else:
+                i += 1
 
     async def backfill(
         self,
