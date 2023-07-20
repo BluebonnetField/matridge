@@ -211,7 +211,11 @@ class Client(AuthenticationClient):
     async def on_presence(self, presence: nio.PresenceEvent):
         if presence.user_id == self.session.contacts.user_legacy_id:
             return
-        contact = await self.session.contacts.by_legacy_id(presence.user_id)
+        try:
+            contact = await self.session.contacts.by_legacy_id(presence.user_id)
+        except XMPPError as e:
+            self.log.debug("Ignoring presence: %s", presence, exc_info=e)
+            return
         contact.update_presence(presence)
 
     @catch_all
