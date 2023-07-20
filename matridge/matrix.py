@@ -1,7 +1,7 @@
 import json
 import logging
 import shutil
-from asyncio import Task
+from asyncio import Task, create_task
 from functools import wraps
 from typing import TYPE_CHECKING, Awaitable, Callable, Optional, TypedDict, Union
 
@@ -113,7 +113,7 @@ class AuthenticationClient(nio.AsyncClient):
 class Client(AuthenticationClient):
     def __init__(self, server: str, handle: str, session: "Session"):
         super().__init__(server, handle, session.user.jid, session.log)
-        self.sync_task: Optional[Task] = None
+        self.__sync_task: Optional[Task] = None
         self.session = session
         self.reactions = ReactionCache(self)
 
@@ -136,6 +136,16 @@ class Client(AuthenticationClient):
         room_id = room.room_id if isinstance(room, nio.MatrixRoom) else room
         return await self.session.bookmarks.by_legacy_id(room_id)
 
+    def __launch_sync(self):
+        self.__sync_task = create_task(self.sync_forever())
+        self.__sync_task.add_done_callback(self.__relaunch_sync)
+
+    def __relaunch_sync(self, sync_task: Task):
+        self.log.warning(
+            "Sync task is done, restarting", exc_info=sync_task.exception()
+        )
+        self.__launch_sync()
+
     async def get_participant(
         self, room: nio.MatrixRoom, event: nio.Event
     ) -> "Participant":
@@ -155,7 +165,12 @@ class Client(AuthenticationClient):
         if isinstance(resp, nio.SyncError):
             raise PermissionError(resp)
         self.__add_event_handlers()
-        self.sync_task = self.session.xmpp.loop.create_task(self.sync_forever())
+        self.__launch_sync()
+
+    def stop_listen(self):
+        if self.__sync_task is None:
+            return
+        self.__sync_task.cancel()
 
     async def try_download(self, url: str) -> Optional[nio.DownloadResponse]:
         resp = await self.download(url)

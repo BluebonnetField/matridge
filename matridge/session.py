@@ -46,9 +46,7 @@ class Session(BaseSession[str, Recipient]):
         return f"Logged in as {self.matrix.user}"
 
     async def logout(self):
-        if self.matrix.sync_task is None:
-            return
-        self.matrix.sync_task.cancel()
+        self.matrix.stop_listen()
 
     @staticmethod
     def __relates_to(
