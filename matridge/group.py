@@ -1,4 +1,3 @@
-import asyncio
 import typing
 
 import nio
@@ -80,13 +79,14 @@ class MUC(LegacyMUC[str, str, Participant, str]):
 
     async def fill_participants(self):
         room = await self.get_room()
-        for i in range(config.MAX_WAIT_MEMBERS_SYNC):
-            if room.members_synced:
-                break
-            self.log.debug("Waiting for members to be synced")
-            await asyncio.sleep(1)
-        else:
-            self.log.debug("Do not wait for members to be synced anymore")
+        if not room.members_synced:
+            resp = await self.session.matrix.joined_members(self.legacy_id)
+            if isinstance(resp, nio.JoinedMembersResponse):
+                self.log.debug(
+                    "Joined members response: %s participants", len(resp.members)
+                )
+            else:
+                self.log.debug("Joined members error: %s", resp)
 
         power_levels = room.power_levels.users
         i = 0
