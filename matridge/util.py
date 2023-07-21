@@ -28,8 +28,8 @@ class MatrixMixin(MessageMixin):
             author = await self.muc.get_participant_by_legacy_id(event.sender)
             self.log.debug("Author: %r", author)
             reply_to.author = author
-            if hasattr(event, "body"):
-                reply_to.body = get_body(event.body)
+            if isinstance(event, nio.RoomMessage):
+                reply_to.body = get_body(event)
         return reply_to
 
     async def send_matrix_message(
