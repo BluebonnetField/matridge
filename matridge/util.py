@@ -60,12 +60,21 @@ class MatrixMixin(MessageMixin):
                 )
                 return
             attachments = [
-                LegacyAttachment(data=resp.body, legacy_file_id=resp.uuid or msg.url)
+                LegacyAttachment(
+                    data=resp.body,
+                    legacy_file_id=resp.uuid or msg.url,
+                    name=get_body(msg) or None,
+                )
             ]
         else:
             attachments = []
 
-        await self.send_files(attachments, msg.event_id, get_body(msg), **kwargs)
+        await self.send_files(
+            attachments,
+            msg.event_id,
+            body=None if attachments else get_body(msg),
+            **kwargs,
+        )
 
 
 def strip_reply_fallback(formatted_body: str) -> str:
