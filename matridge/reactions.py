@@ -68,7 +68,11 @@ class ReactionCache:
             emoji = relates_to.get("key")
             if emoji:
                 target = ReactionTarget(
-                    room=room, sender=event.sender, event=relates_to["event_id"]
+                    room=room,
+                    sender=event.sender,
+                    event=await self.matrix.get_original_id(
+                        room, relates_to["event_id"]
+                    ),
                 )
                 self._reaction_cache[target].append(
                     Reaction(event=event.event_id, emoji=emoji)

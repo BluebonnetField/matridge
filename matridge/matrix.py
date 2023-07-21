@@ -6,13 +6,14 @@ from functools import wraps
 from typing import TYPE_CHECKING, Awaitable, Callable, Optional, TypedDict, Union
 
 import nio
+from async_lru import alru_cache
 from slidge.core import config
 from slidge.util.types import LegacyAttachment
 from slixmpp import JID
 from slixmpp.exceptions import XMPPError
 
 from .reactions import ReactionCache
-from .util import server_timestamp_to_datetime
+from .util import get_replace, server_timestamp_to_datetime
 
 if TYPE_CHECKING:
     from .group import MUC, Participant
@@ -284,7 +285,8 @@ class Client(AuthenticationClient):
 
         source = event.source
         relates = source["content"]["m.relates_to"]
-        msg_id = relates["event_id"]
+        msg_id = await self.get_original_id(room.room_id, relates["event_id"])
+
         sender = source["sender"]
         emoji = relates["key"]
 
@@ -299,10 +301,20 @@ class Client(AuthenticationClient):
         self.log.debug("Redaction: %s", event)
         participant = await self.get_participant(room, event)
         if reaction_target := self.reactions.remove(event.redacts):
+            msg_id = await self.get_original_id(reaction_target.event)
             reactions = await self.reactions.get(
-                reaction_target.room, reaction_target.event, reaction_target.sender
+                reaction_target.room, msg_id, reaction_target.sender
             )
-            participant.react(reaction_target.event, reactions)
+            participant.react(msg_id, reactions)
             return
 
         participant.moderate(event.redacts, reason=event.reason)
+
+    @alru_cache(maxsize=1000)
+    async def get_original_id(self, room_id: str, event_id: str) -> str:
+        resp = await self.room_get_event(room_id, event_id)
+        if isinstance(resp, nio.RoomGetEventError):
+            self.log.warning("Could not get original event")
+            return event_id
+        assert isinstance(resp, nio.RoomGetEventResponse)
+        return get_replace(resp.event.source) or event_id

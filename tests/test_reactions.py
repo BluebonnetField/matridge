@@ -66,6 +66,10 @@ class MockMatrix:
     async def sync(sync_filter):
         return nio.SyncResponse(None, None, None, None, None, None)
 
+    @staticmethod
+    async def get_original_id(room, event_id):
+        return event_id
+
 
 def mock_source(data):
     x = defaultdict(str)
