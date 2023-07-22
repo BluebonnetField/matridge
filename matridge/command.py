@@ -61,7 +61,7 @@ class ListSpaces(Command):
             fields=[FormField("name"), FormField("jid", type="jid-single")],
             description=f"Rooms of '{space.name or 'unnamed'}'",
             jids_are_mucs=True,
-            items=[{"name": muc.name, "jid": muc.jid} for muc in mucs],  # type:ignore
+            items=[{"name": muc.name, "jid": str(muc.jid)} for muc in mucs],
         )
 
 
