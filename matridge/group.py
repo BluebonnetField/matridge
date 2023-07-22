@@ -41,11 +41,7 @@ class MUC(LegacyMUC[str, str, Participant, str]):
             raise XMPPError("item-not-found", f"No room named {self.legacy_id}")
 
     async def get_message(self, msg_id: str) -> typing.Optional[nio.Event]:
-        resp = await self.session.matrix.room_get_event(self.legacy_id, msg_id)
-        self.log.debug("Resp: %s", resp)
-        if isinstance(resp, nio.RoomGetEventResponse):
-            return resp.event
-        return None
+        return await self.session.matrix.get_event(self.legacy_id, msg_id)
 
     async def update_info(self):
         room = await self.get_room()

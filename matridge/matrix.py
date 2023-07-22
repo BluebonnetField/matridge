@@ -312,9 +312,14 @@ class Client(AuthenticationClient):
 
     @alru_cache(maxsize=1000)
     async def get_original_id(self, room_id: str, event_id: str) -> str:
-        resp = await self.room_get_event(room_id, event_id)
-        if isinstance(resp, nio.RoomGetEventError):
-            self.log.warning("Could not get original event")
+        event = await self.get_event(room_id, event_id)
+        if event is None:
             return event_id
-        assert isinstance(resp, nio.RoomGetEventResponse)
-        return get_replace(resp.event.source) or event_id
+        return get_replace(event.source) or event_id
+
+    @alru_cache(maxsize=100)
+    async def get_event(self, room_id: str, event_id: str) -> Optional[nio.Event]:
+        resp = await self.session.matrix.room_get_event(room_id, event_id)
+        if isinstance(resp, nio.RoomGetEventError):
+            return None
+        return resp.event
