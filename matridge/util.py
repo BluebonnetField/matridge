@@ -32,6 +32,41 @@ class MatrixMixin(MessageMixin):
                 reply_to.body = get_body(event)
         return reply_to
 
+    async def __add_reply_to(self, msg: nio.RoomMessage, replace: str, kwargs: dict):
+        if replace is None:
+            kwargs["reply_to"] = await self.__get_reply_to(msg)
+            return
+
+        kwargs["correction"] = True
+        original = await self.muc.get_message(replace)
+        if not isinstance(original, nio.RoomMessage):
+            self.log.warning(
+                "Reply to something else than a message, or couldn't fetch it: %s",
+                original,
+            )
+            return
+        kwargs["reply_to"] = await self.__get_reply_to(original)
+
+    async def __get_attachments(self, msg: nio.RoomMessage, **kwargs):
+        if not isinstance(msg, nio.RoomMessageMedia):
+            return []
+
+        resp = await self.session.matrix.try_download(msg.url)
+        if not resp:
+            self.send_text(
+                "/me tried to send a file matridge couldn't download. :(",
+                msg.event_id,
+                **kwargs,
+            )
+            return []
+        return [
+            LegacyAttachment(
+                data=resp.body,
+                legacy_file_id=resp.uuid or msg.url,
+                name=get_body(msg) or None,
+            )
+        ]
+
     async def send_matrix_message(
         self,
         msg: nio.RoomMessage,
@@ -48,37 +83,8 @@ class MatrixMixin(MessageMixin):
             archive_only=archive_only,
             when=server_timestamp_to_datetime(msg),
         )
-        if replace is None:
-            kwargs["reply_to"] = await self.__get_reply_to(msg)
-        else:
-            kwargs["correction"] = True
-            original = await self.session.matrix.get_event(self.muc.legacy_id, replace)
-            if isinstance(original, nio.RoomMessage):
-                kwargs["reply_to"] = await self.__get_reply_to(original)
-            else:
-                self.log.warning(
-                    "Reply to something else than a message, or couldn't fetch it: %s",
-                    original,
-                )
-
-        if isinstance(msg, nio.RoomMessageMedia):
-            resp = await self.session.matrix.try_download(msg.url)
-            if not resp:
-                self.send_text(
-                    "/me tried to send a file matridge couldn't download. :(",
-                    msg.event_id,
-                    **kwargs,
-                )
-                return
-            attachments = [
-                LegacyAttachment(
-                    data=resp.body,
-                    legacy_file_id=resp.uuid or msg.url,
-                    name=get_body(msg) or None,
-                )
-            ]
-        else:
-            attachments = []
+        await self.__add_reply_to(msg, replace, kwargs)
+        attachments = await self.__get_attachments(msg, **kwargs)
 
         await self.send_files(
             attachments,
