@@ -35,20 +35,31 @@ class MatrixMixin(MessageMixin):
     async def send_matrix_message(
         self,
         msg: nio.RoomMessage,
-        correction=False,
+        replace=None,
         archive_only=False,
     ):
         self.log.debug("Message: %s", msg.source)
 
-        if new := get_new_message(msg):
-            return await self.send_matrix_message(new, True, archive_only)
+        if id_and_new := get_new_message(msg):
+            replace, new = id_and_new
+            return await self.send_matrix_message(new, replace, archive_only)
 
         kwargs = dict(
             archive_only=archive_only,
-            reply_to=await self.__get_reply_to(msg),
-            correction=correction,
             when=server_timestamp_to_datetime(msg),
         )
+        if replace is None:
+            kwargs["reply_to"] = await self.__get_reply_to(msg)
+        else:
+            kwargs["correction"] = True
+            original = await self.session.matrix.get_event(self.muc.legacy_id, replace)
+            if isinstance(original, nio.RoomMessage):
+                kwargs["reply_to"] = await self.__get_reply_to(original)
+            else:
+                self.log.warning(
+                    "Reply to something else than a message, or couldn't fetch it: %s",
+                    original,
+                )
 
         if isinstance(msg, nio.RoomMessageMedia):
             resp = await self.session.matrix.try_download(msg.url)
@@ -119,7 +130,7 @@ def get_new_message(msg: nio.RoomMessage):
     replace = get_replace(msg.source)
     if not replace:
         return
-    return nio.RoomMessage.parse_event(
+    return replace, nio.RoomMessage.parse_event(
         {
             "content": get_new_content(msg.source),
             "origin_server_ts": msg.server_timestamp,
