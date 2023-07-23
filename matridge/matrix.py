@@ -301,7 +301,7 @@ class Client(AuthenticationClient):
         self.log.debug("Redaction: %s", event)
         participant = await self.get_participant(room, event)
         if reaction_target := self.reactions.remove(event.redacts):
-            msg_id = await self.get_original_id(reaction_target.event)
+            msg_id = await self.get_original_id(room.room_id, reaction_target.event)
             reactions = await self.reactions.get(
                 reaction_target.room, msg_id, reaction_target.sender
             )
