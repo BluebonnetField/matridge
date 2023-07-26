@@ -138,7 +138,7 @@ class Client(AuthenticationClient):
         return await self.session.bookmarks.by_legacy_id(room_id)
 
     def __launch_sync(self):
-        self.__sync_task = create_task(self.sync_forever())
+        self.__sync_task = create_task(self.sync_forever(timeout=60))
         self.__sync_task.add_done_callback(self.__relaunch_sync)
 
     def __relaunch_sync(self, sync_task: Task):
