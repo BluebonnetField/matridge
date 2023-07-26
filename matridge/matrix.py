@@ -315,6 +315,8 @@ class Client(AuthenticationClient):
         event = await self.get_event(room_id, event_id)
         if event is None:
             return event_id
+        # no need to check recursively because replacements must refer to
+        # the original event
         return get_replace(event.source) or event_id
 
     @alru_cache(maxsize=100)

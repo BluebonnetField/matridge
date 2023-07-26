@@ -71,17 +71,21 @@ class MatrixMixin(MessageMixin):
         self,
         msg: nio.RoomMessage,
         replace=None,
+        replacement_event_id=None,
         archive_only=False,
     ):
         self.log.debug("Message: %s", msg.source)
 
         if id_and_new := get_new_message(msg):
             replace, new = id_and_new
-            return await self.send_matrix_message(new, replace, archive_only)
+            return await self.send_matrix_message(
+                new, replace, msg.event_id, archive_only
+            )
 
         kwargs = dict(
             archive_only=archive_only,
             when=server_timestamp_to_datetime(msg),
+            correction_event_id=replacement_event_id,
         )
         await self.__add_reply_to(msg, replace, kwargs)
         attachments = await self.__get_attachments(msg, **kwargs)

@@ -48,13 +48,18 @@ class Session(BaseSession[str, Recipient]):
     async def logout(self):
         self.matrix.stop_listen()
 
-    @staticmethod
-    def __relates_to(
-        content: dict[str, Any], reply_to_msg_id: Optional[str], thread: Optional[str]
+    async def __relates_to(
+        self,
+        room_id: str,
+        content: dict[str, Any],
+        reply_to_msg_id: Optional[str],
+        thread: Optional[str],
     ):
         relates_to = dict[str, Any]()
         if reply_to_msg_id:
-            relates_to["m.in_reply_to"] = {"event_id": reply_to_msg_id}
+            relates_to["m.in_reply_to"] = {
+                "event_id": await self.matrix.get_original_id(room_id, reply_to_msg_id)
+            }
         if thread:
             relates_to["rel_type"] = "m.thread"
             relates_to["event_id"] = thread
@@ -93,7 +98,7 @@ class Session(BaseSession[str, Recipient]):
         thread: Optional[str] = None,
     ) -> Optional[LegacyMessageType]:
         content = {"msgtype": "m.text", "body": text}
-        self.__relates_to(content, reply_to_msg_id, thread)
+        await self.__relates_to(chat.legacy_id, content, reply_to_msg_id, thread)
         return await self.__room_send(chat, content)
 
     @no_dm
@@ -121,7 +126,7 @@ class Session(BaseSession[str, Recipient]):
             "body": filename,
             "url": resp.content_uri,
         }
-        self.__relates_to(content, reply_to_msg_id, thread)
+        await self.__relates_to(chat.legacy_id, content, reply_to_msg_id, thread)
         return await self.__room_send(chat, content)
 
     async def active(self, c: RecipientType, thread: Optional[LegacyThreadType] = None):
@@ -164,7 +169,7 @@ class Session(BaseSession[str, Recipient]):
             "m.new_content": {"body": text, "msgtype": "m.text"},
             "m.relates_to": {"rel_type": "m.replace", "event_id": legacy_msg_id},
         }
-        self.__relates_to(content, None, thread)
+        await self.__relates_to(c.legacy_id, content, None, thread)
         return await self.__room_send(c, content)
 
     @no_dm
