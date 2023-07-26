@@ -94,6 +94,7 @@ class MatrixMixin(MessageMixin):
             attachments,
             msg.event_id,
             body=None if attachments else get_body(msg),
+            thread=get_rel(msg.source, "m.thread") or msg.event_id,
             **kwargs,
         )
 
@@ -115,15 +116,18 @@ def get_reply_to(source: dict) -> Optional[str]:
     )
 
 
-def get_replace(source: dict) -> Optional[str]:
+def get_replace(source: dict):
+    return get_rel(source, "m.replace")
+
+
+def get_rel(source: dict, rel_type: str) -> Optional[str]:
     content = source.get("content")
     if not content:
         return None
     relates_to = content.get("m.relates_to")
     if not relates_to:
         return None
-    rel_type = relates_to.get("rel_type")
-    if rel_type != "m.replace":
+    if relates_to.get("rel_type") != rel_type:
         return None
     return relates_to.get("event_id")
 
@@ -137,7 +141,7 @@ def get_new_content(source: dict) -> Optional[nio.RoomMessage]:
 
 
 def get_new_message(msg: nio.RoomMessage):
-    replace = get_replace(msg.source)
+    replace = get_rel(msg.source, "m.replace")
     if not replace:
         return
     return replace, nio.RoomMessage.parse_event(

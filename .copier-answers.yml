@@ -27,9 +27,8 @@ xeps:
         but slidge will emit delivery receipts when the matrix server acks a messages.
     number: 184
     status: complete
--   note: Not yet.
-    number: 201
-    status: planned
+-   number: 201
+    status: complete
 -   note: null
     number: 319
     status: complete
