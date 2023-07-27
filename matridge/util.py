@@ -62,7 +62,7 @@ class MatrixMixin(MessageMixin):
         return [
             LegacyAttachment(
                 data=resp.body,
-                legacy_file_id=resp.uuid or msg.url,
+                legacy_file_id=resp.uuid or msg.url.replace("/", "-").replace(":", ""),
                 name=get_body(msg) or None,
             )
         ]
