@@ -7,11 +7,12 @@ from typing import TYPE_CHECKING, Awaitable, Callable, Optional, TypedDict, Unio
 
 import nio
 from async_lru import alru_cache
-from slidge.core import config
+from slidge.core import config as global_config
 from slidge.util.types import LegacyAttachment
 from slixmpp import JID
 from slixmpp.exceptions import XMPPError
 
+from . import config
 from .reactions import ReactionCache
 from .util import get_replace, server_timestamp_to_datetime
 
@@ -54,8 +55,8 @@ class AuthenticationClient(nio.AsyncClient):
     ):
         if not server.startswith("http"):
             server = "https://" + server
-        self._storage = config.HOME_DIR / jid.bare
-        self.store_path = store_path = config.HOME_DIR / (jid.bare + "_state")
+        self._storage = global_config.HOME_DIR / jid.bare
+        self.store_path = store_path = global_config.HOME_DIR / (jid.bare + "_state")
         store_path.mkdir(exist_ok=True)
         cfg = nio.AsyncClientConfig(
             store_sync_tokens=True,
@@ -162,7 +163,7 @@ class Client(AuthenticationClient):
     async def listen(self):
         # we need to sync full state or else we don't get the list of all rooms
         resp = await self.sync(full_state=True)
-        self.log.debug("Sync: %s", resp)
+        self.log.debug("Sync")
         if isinstance(resp, nio.SyncError):
             raise PermissionError(resp)
         self.__add_event_handlers()
@@ -182,7 +183,7 @@ class Client(AuthenticationClient):
 
     async def fetch_history(self, room_id: str, limit: int):
         sync_resp = await self.sync()
-        self.log.debug("Sync resp: %s", sync_resp)
+        self.log.debug("Sync")
         if isinstance(sync_resp, nio.SyncError):
             return
         resp = await self.room_messages(
@@ -197,7 +198,8 @@ class Client(AuthenticationClient):
 
     @catch_all
     async def on_event(self, room: nio.MatrixRoom, event: nio.Event):
-        self.log.debug("Event %s '%s': %r", type(event), room, event)
+        if not config.NIO_SILENT:
+            self.log.debug("Event %s '%s': %r", type(event), room, event)
         if getattr(event, "type", None) == "m.reaction":
             self.log.debug("Reaction")
             await self.on_reaction(room, event)

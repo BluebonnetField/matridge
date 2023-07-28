@@ -47,7 +47,7 @@ class ReactionCache:
         filt = {"senders": [sender], "types": ["m.reaction"]}
 
         sync_resp = await self.matrix.sync(sync_filter=filt)
-        self.log.debug("Sync resp: %s", sync_resp)
+        self.log.debug("Sync")
         if isinstance(sync_resp, nio.SyncError):
             return
 
@@ -57,7 +57,6 @@ class ReactionCache:
             start=sync_resp.next_batch,
             message_filter=filt,
         )
-        self.log.debug("Get reactions resp: %s", resp)
         if not isinstance(resp, nio.RoomMessagesResponse):
             return
 

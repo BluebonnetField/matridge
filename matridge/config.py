@@ -10,3 +10,9 @@ MAX_PARTICIPANTS_FETCH__DOC = (
     "they speak or if they spoke in the back-filled events. "
     "Participants with power levels > 50 (ie, admins) will be fetched."
 )
+
+NIO_SILENT = True
+NIO_SILENT__DOC = (
+    "Set this to False to respect the global log level from the matrix lib. "
+    "It's REALLY verbose, so the default is to use WARNING."
+)

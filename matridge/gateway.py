@@ -5,6 +5,7 @@ from nio.responses import LoginError
 from slidge import BaseGateway, FormField, GatewayUser, global_config
 from slixmpp import JID
 
+from . import config
 from .matrix import AuthenticationClient
 
 
@@ -35,6 +36,12 @@ class Gateway(BaseGateway):
     PROPER_RECEIPTS = True
 
     GROUPS = True
+
+    def __init__(self):
+        super().__init__()
+        if config.NIO_SILENT:
+            logging.getLogger("peewee").setLevel(logging.WARNING)
+            logging.getLogger("nio.responses").setLevel(logging.WARNING)
 
     async def validate(
         self, user_jid: JID, registration_form: dict[str, Optional[str]]
