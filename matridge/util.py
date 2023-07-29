@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
+from urllib.parse import quote
 
 import bs4
 import nio
@@ -51,18 +52,10 @@ class MatrixMixin(MessageMixin):
         if not isinstance(msg, nio.RoomMessageMedia):
             return []
 
-        resp = await self.session.matrix.try_download(msg.url)
-        if not resp:
-            self.send_text(
-                "/me tried to send a file matridge couldn't download. :(",
-                msg.event_id,
-                **kwargs,
-            )
-            return []
         return [
             LegacyAttachment(
-                data=resp.body,
-                legacy_file_id=resp.uuid or msg.url.replace("/", "-").replace(":", ""),
+                url=await self.session.matrix.mxc_to_http(msg.url),
+                legacy_file_id=quote(msg.url),
                 name=get_body(msg) or None,
             )
         ]

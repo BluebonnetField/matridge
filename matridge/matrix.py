@@ -174,13 +174,6 @@ class Client(AuthenticationClient):
             return
         self.__sync_task.cancel()
 
-    async def try_download(self, url: str) -> Optional[nio.DownloadResponse]:
-        resp = await self.download(url)
-        if isinstance(resp, nio.DownloadResponse):
-            return resp
-        self.log.warning("Could not download attachment: %r", resp)
-        return None
-
     async def fetch_history(self, room_id: str, limit: int):
         sync_resp = await self.sync()
         self.log.debug("Sync")
