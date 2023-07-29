@@ -67,11 +67,7 @@ class MUC(LegacyMUC[str, str, Participant, str]):
         self.subject = room.topic
         if not room.room_avatar_url:
             return
-        resp = await self.session.matrix.download(room.room_avatar_url)
-        if isinstance(resp, nio.DownloadResponse):
-            self.avatar = resp.body
-        else:
-            self.log.debug("No avatar: %s", resp)
+        self.avatar = await self.session.matrix.mxc_to_http(room.room_avatar_url)
 
     async def fill_participants(self):
         room = await self.get_room()

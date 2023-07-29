@@ -35,17 +35,10 @@ class Contact(LegacyContact[str]):
         if resp.other_info:
             self.set_vcard(note=str(resp.other_info))
 
-        if not resp.avatar_url:
-            return
-
-        self.__download_avatar_task = self.xmpp.loop.create_task(
-            self.__download_avatar(resp.avatar_url)
-        )
-
-    async def __download_avatar(self, avatar_url: str):
-        resp = await self.session.matrix.try_download(avatar_url)
-        if resp:
-            await self.set_avatar(resp.body, resp.uuid or avatar_url)
+        if mxc := resp.avatar_url:
+            self.avatar = await self.session.matrix.mxc_to_http(mxc)
+        else:
+            self.avatar = None
 
     def update_presence(self, p: nio.PresenceEvent):
         kw = dict(status=p.status_msg)
