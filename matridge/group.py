@@ -86,6 +86,10 @@ class MUC(LegacyMUC[str, str, Participant, str]):
 
         power_levels = room.power_levels.users
         i = 0
+        if len(room.users.items()) > config.MAX_PARTICIPANTS_FETCH:
+            # matrix groups are huge
+            self.KEEP_BACKFILLED_PARTICIPANTS = True
+
         for user_id, user in list(room.users.items()):
             if user_id == self.session.matrix.user_id:
                 self.log.debug(
