@@ -10,6 +10,7 @@ python = "^3.9"
 matrix-nio = {extras = ["e2e"], version = "^0.21"}
 beautifulsoup4 = "^4.12.2"
 async-lru = "^2.0.3"
+slidge-style-parser = "^0.1.0"
 
 [tool.poetry.dependencies.slidge]
 git = "https://git.sr.ht/~nicoco/slidge"
