@@ -10,6 +10,7 @@ from slixmpp.exceptions import XMPPError
 from .contact import Contact, Roster
 from .group import MUC, Bookmarks, Participant
 from .matrix import Client
+from .util import get_content
 
 Sender = Union[Contact, Participant]
 Recipient = Union[MUC, Contact]
@@ -97,7 +98,7 @@ class Session(BaseSession[str, Recipient]):
         reply_to: Optional[Sender] = None,
         thread: Optional[str] = None,
     ) -> Optional[LegacyMessageType]:
-        content = {"msgtype": "m.text", "body": text}
+        content = get_content(text)
         await self.__relates_to(chat.legacy_id, content, reply_to_msg_id, thread)
         return await self.__room_send(chat, content)
 
@@ -166,7 +167,7 @@ class Session(BaseSession[str, Recipient]):
         content = {
             "msgtype": "m.text",
             "body": "* " + text,
-            "m.new_content": {"body": text, "msgtype": "m.text"},
+            "m.new_content": get_content(text),
             "m.relates_to": {"rel_type": "m.replace", "event_id": legacy_msg_id},
         }
         await self.__relates_to(c.legacy_id, content, None, thread)

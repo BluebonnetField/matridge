@@ -41,6 +41,11 @@ xeps:
 -   note: For attachments.
     number: 363
     status: complete
+-   note: Message received from XMPP will have their bodies parsed for Message Styling
+        tags, plus "||spoiler||". Messages received from Matrix will not be parsed
+        and converted.
+    number: 393
+    status: partial
 -   note: Matrix's redacted events are mapped to that.
     number: 424
     status: complete

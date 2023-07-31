@@ -53,6 +53,7 @@ strict = false
 [[tool.mypy.overrides]]
 module = [
     "nio.*",
+    "slidge_style_parser.*",
 ]
 ignore_missing_imports = true
 

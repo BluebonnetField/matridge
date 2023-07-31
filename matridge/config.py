@@ -16,3 +16,17 @@ NIO_SILENT__DOC = (
     "Set this to False to respect the global log level from the matrix lib. "
     "It's REALLY verbose, so the default is to use WARNING."
 )
+
+PARSE_MESSAGE_STYLING = True
+PARSE_MESSAGE_STYLING__DOC = """
+Convert Message Styling (XEP-0393) message bodies to Matrix custom HTML.
+Supported markup:
+_underline_
+*bold*
+~strikethrough~
+`code span`
+```code block```
+>quote
+||spoiler
+\\_escape style_
+"""

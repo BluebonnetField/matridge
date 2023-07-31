@@ -7,6 +7,9 @@ import bs4
 import nio
 from slidge.core.mixins import MessageMixin
 from slidge.util.types import LegacyAttachment, MessageReference
+from slidge_style_parser import format_body
+
+from . import config
 
 if TYPE_CHECKING:
     from .group import MUC
@@ -168,6 +171,26 @@ def get_body(msg: nio.RoomMessage):
 
 def server_timestamp_to_datetime(event: nio.Event):
     return datetime.fromtimestamp(event.server_timestamp / 1000, tz=timezone.utc)
+
+
+def get_content(text: str):
+    content = {"msgtype": "m.text", "body": text}
+    if config.PARSE_MESSAGE_STYLING:
+        formatted_body = format_body(text, MATRIX_FORMATS)
+        content["formatted_body"] = formatted_body
+        content["format"] = "org.matrix.custom.html"
+    return content
+
+
+MATRIX_FORMATS = {
+    "_": ("<em>", "</em>"),
+    "*": ("<strong>", "</strong>"),
+    "~": ("<strike>", "</strike>"),
+    "`": ("<code>", "</code>"),
+    "```": ("<pre><code>", "</code></pre>"),
+    ">": ("<blockquote>", "</blockquote>"),
+    "||": ("<span data-mx-spoiler>", "</span>"),
+}
 
 
 log = logging.getLogger()
