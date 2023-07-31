@@ -2,6 +2,7 @@ image: alpine/3.17
 packages:
   - poetry
   - python3-dev
+  - rust
 secrets:
   - 3ecea679-dec7-4ac0-8821-75d0f4fe0773
   - dc710d9d-8043-4e1d-9837-b35bfa02800a
