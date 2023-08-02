@@ -185,9 +185,10 @@ def get_content(text: str):
 MATRIX_FORMATS = {
     "_": ("<em>", "</em>"),
     "*": ("<strong>", "</strong>"),
-    "~": ("<strike>", "</strike>"),
+    "~": ("<del>", "</del>"),
     "`": ("<code>", "</code>"),
     "```": ("<pre><code>", "</code></pre>"),
+    "```language": ("<pre><code class=\"language-{}\">", "</code></pre>"),
     ">": ("<blockquote>", "</blockquote>"),
     "||": ("<span data-mx-spoiler>", "</span>"),
 }
