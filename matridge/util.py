@@ -188,7 +188,7 @@ MATRIX_FORMATS = {
     "~": ("<del>", "</del>"),
     "`": ("<code>", "</code>"),
     "```": ("<pre><code>", "</code></pre>"),
-    "```language": ("<pre><code class=\"language-{}\">", "</code></pre>"),
+    "```language": ('<pre><code class="language-{}">', "</code></pre>"),
     ">": ("<blockquote>", "</blockquote>"),
     "||": ("<span data-mx-spoiler>", "</span>"),
 }
