@@ -42,6 +42,7 @@ class Gateway(BaseGateway):
         if config.NIO_SILENT:
             logging.getLogger("peewee").setLevel(logging.WARNING)
             logging.getLogger("nio.responses").setLevel(logging.WARNING)
+            logging.getLogger("nio.rooms").setLevel(logging.WARNING)
 
     async def validate(
         self, user_jid: JID, registration_form: dict[str, Optional[str]]
