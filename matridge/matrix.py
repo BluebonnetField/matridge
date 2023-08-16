@@ -1,7 +1,7 @@
 import json
 import logging
 import shutil
-from asyncio import Task, create_task
+from asyncio import Task, TimeoutError, create_task
 from functools import wraps
 from typing import TYPE_CHECKING, Awaitable, Callable, Optional, TypedDict, Union
 
@@ -143,9 +143,15 @@ class Client(AuthenticationClient):
         self.__sync_task.add_done_callback(self.__relaunch_sync)
 
     def __relaunch_sync(self, sync_task: Task):
-        self.log.warning(
-            "Sync task is done, restarting", exc_info=sync_task.exception()
-        )
+        exc = sync_task.exception()
+        if isinstance(exc, TimeoutError):
+            self.log.debug("Sync task timed out, restarting", exc_info=exc)
+        elif exc is None:
+            self.log.warning(
+                "Sync task done, but no exception? What is this sorcery?", exc_info=exc
+            )
+        else:
+            self.log.warning("Sync task has an exception, restarting", exc_info=exc)
         self.__launch_sync()
 
     async def get_participant(
