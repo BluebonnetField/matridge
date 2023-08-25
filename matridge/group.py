@@ -32,7 +32,7 @@ class Bookmarks(LegacyBookmarks):
 
 class MUC(LegacyMUC[str, str, Participant, str]):
     session: "Session"
-    type = MucType.GROUP
+    type = MucType.CHANNEL_NON_ANONYMOUS
 
     async def get_room(self):
         try:
