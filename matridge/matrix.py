@@ -1,7 +1,8 @@
 import json
 import logging
 import shutil
-from asyncio import Task, TimeoutError, create_task
+import time
+from asyncio import Task, create_task, sleep
 from functools import wraps
 from typing import TYPE_CHECKING, Awaitable, Callable, Optional, TypedDict, Union
 
@@ -113,6 +114,11 @@ class AuthenticationClient(nio.AsyncClient):
 
 
 class Client(AuthenticationClient):
+    MIN_RETRY_TIME = 3
+    MAX_RETRY_TIME = 300
+    REQUEST_TIMEOUT = 60
+    CONSIDER_SUCCESSFUL = 10
+
     def __init__(self, server: str, handle: str, session: "Session"):
         super().__init__(server, handle, session.user.jid, session.log)
         self.__sync_task: Optional[Task] = None
@@ -138,21 +144,24 @@ class Client(AuthenticationClient):
         room_id = room.room_id if isinstance(room, nio.MatrixRoom) else room
         return await self.session.bookmarks.by_legacy_id(room_id)
 
-    def __launch_sync(self):
-        self.__sync_task = create_task(self.sync_forever(timeout=60))
-        self.__sync_task.add_done_callback(self.__relaunch_sync)
-
-    def __relaunch_sync(self, sync_task: Task):
-        exc = sync_task.exception()
-        if isinstance(exc, TimeoutError):
-            self.log.debug("Sync task timed out, restarting", exc_info=exc)
-        elif exc is None:
-            self.log.warning(
-                "Sync task done, but no exception? What is this sorcery?", exc_info=exc
-            )
-        else:
-            self.log.warning("Sync task has an exception, restarting", exc_info=exc)
-        self.__launch_sync()
+    async def __sync_forever(self):
+        attempts = 0
+        while True:
+            start = time.time()
+            try:
+                await self.sync_forever(timeout=self.REQUEST_TIMEOUT)
+            except Exception as e:
+                duration = time.time() - start
+                if duration < self.CONSIDER_SUCCESSFUL:
+                    attempts += 1
+                    wait = min(attempts * self.MIN_RETRY_TIME, self.MAX_RETRY_TIME)
+                else:
+                    attempts = 0
+                    wait = self.MIN_RETRY_TIME
+                self.log.error("Sync task has raised %s, retrying in %s", e, wait)
+                await sleep(wait)
+            else:
+                break
 
     async def get_participant(
         self, room: nio.MatrixRoom, event: nio.Event
@@ -173,7 +182,7 @@ class Client(AuthenticationClient):
         if isinstance(resp, nio.SyncError):
             raise PermissionError(resp)
         self.__add_event_handlers()
-        self.__launch_sync()
+        self.__sync_task = create_task(self.__sync_forever())
 
     def stop_listen(self):
         if self.__sync_task is None:
