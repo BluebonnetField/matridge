@@ -7,7 +7,7 @@ import bs4
 import nio
 from slidge.core.mixins import MessageMixin
 from slidge.util.types import LegacyAttachment, MessageReference
-from slidge_style_parser import format_body
+from slidge_style_parser import format_for_matrix
 
 from . import config
 
@@ -52,16 +52,43 @@ class MatrixMixin(MessageMixin):
         kwargs["reply_to"] = await self.__get_reply_to(original)
 
     async def __get_attachments(self, msg: nio.RoomMessage, **kwargs):
-        if not isinstance(msg, nio.RoomMessageMedia):
-            return []
+        if isinstance(msg, nio.RoomMessageMedia):
+            return [
+                LegacyAttachment(
+                    url=await self.session.matrix.mxc_to_http(msg.url),
+                    legacy_file_id=quote(msg.url),
+                    name=get_body(msg) or None,
+                )
+            ]
 
-        return [
-            LegacyAttachment(
-                url=await self.session.matrix.mxc_to_http(msg.url),
-                legacy_file_id=quote(msg.url),
-                name=get_body(msg) or None,
+        if isinstance(msg, nio.RoomEncryptedMedia):
+            return await self.__get_encrytped_attachments(msg)
+
+        return []
+
+    async def __get_encrytped_attachments(self, msg: nio.RoomMessage):
+        resp = await self.session.matrix.download(mxc=msg.url, filename=None)
+        if isinstance(resp, nio.DownloadError):
+            return []
+        else:
+            media_data = resp.body
+            decrypted_data = nio.crypto.attachments.decrypt_attachment(
+                media_data,
+                msg.source["content"]["file"]["key"][
+                    "k"
+                ],
+                msg.source["content"]["file"]["hashes"][
+                    "sha256"
+                ],
+                msg.source["content"]["file"]["iv"],
             )
-        ]
+            return [
+                LegacyAttachment(
+                    data=bytes(decrypted_data),
+                    legacy_file_id=quote(msg.url),
+                    name=get_body(msg) or None,
+                )
+            ]
 
     async def send_matrix_message(
         self,
@@ -180,22 +207,9 @@ def get_content(text: str):
     else:
         content = {"msgtype": "m.text", "body": text}
     if config.PARSE_MESSAGE_STYLING:
-        formatted_body = format_body(text, MATRIX_FORMATS)
+        formatted_body = format_for_matrix(text)
         content["formatted_body"] = formatted_body
         content["format"] = "org.matrix.custom.html"
     return content
-
-
-MATRIX_FORMATS = {
-    "_": ("<em>", "</em>"),
-    "*": ("<strong>", "</strong>"),
-    "~": ("<del>", "</del>"),
-    "`": ("<code>", "</code>"),
-    "```": ("<pre><code>", "</code></pre>"),
-    "```language": ('<pre><code class="language-{}">', "</code></pre>"),
-    ">": ("<blockquote>", "</blockquote>"),
-    "||": ("<span data-mx-spoiler>", "</span>"),
-}
-
 
 log = logging.getLogger()
