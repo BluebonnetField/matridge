@@ -174,7 +174,11 @@ def server_timestamp_to_datetime(event: nio.Event):
 
 
 def get_content(text: str):
-    content = {"msgtype": "m.text", "body": text}
+    if text.startswith("/me"):
+        text = text.removeprefix("/me").lstrip()
+        content = {"msgtype": "m.emote", "body": text}
+    else:
+        content = {"msgtype": "m.text", "body": text}
     if config.PARSE_MESSAGE_STYLING:
         formatted_body = format_body(text, MATRIX_FORMATS)
         content["formatted_body"] = formatted_body

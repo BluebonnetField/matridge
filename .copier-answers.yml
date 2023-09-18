@@ -24,10 +24,12 @@ xeps:
     number: 85
     status: complete
 -   note: There are no recipient-generated receipts (except read marks) in matrix,
-        but slidge will emit delivery receipts when the matrix server acks a messages.
+        but slidge will emit delivery receipts when the matrix server acks a message.
     number: 184
     status: complete
 -   number: 201
+    status: complete
+-   number: 245
     status: complete
 -   note: null
     number: 319

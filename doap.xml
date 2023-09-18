@@ -62,12 +62,19 @@
             <xmpp:SupportedXep>
                 <xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0184.html" />
                 <xmpp:status>complete</xmpp:status>
-                 <xmpp:note>There are no recipient-generated receipts (except read marks) in matrix, but slidge will emit delivery receipts when the matrix server acks a messages.</xmpp:note>
+                 <xmpp:note>There are no recipient-generated receipts (except read marks) in matrix, but slidge will emit delivery receipts when the matrix server acks a message.</xmpp:note>
             </xmpp:SupportedXep>
         </implements>
         <implements>
             <xmpp:SupportedXep>
                 <xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0201.html" />
+                <xmpp:status>complete</xmpp:status>
+
+            </xmpp:SupportedXep>
+        </implements>
+        <implements>
+            <xmpp:SupportedXep>
+                <xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0245.html" />
                 <xmpp:status>complete</xmpp:status>
 
             </xmpp:SupportedXep>
