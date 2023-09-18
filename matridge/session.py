@@ -4,7 +4,13 @@ from typing import Any, Optional, Union
 import aiohttp
 import nio
 from slidge import BaseSession, SearchResult
-from slidge.util.types import LegacyMessageType, LegacyThreadType, RecipientType
+from slidge.util.types import (
+    LegacyMessageType,
+    LegacyThreadType,
+    PseudoPresenceShow,
+    RecipientType,
+    ResourceDict,
+)
 from slixmpp.exceptions import XMPPError
 
 from .contact import Contact, Roster
@@ -223,3 +229,29 @@ class Session(BaseSession[str, Recipient]):
             raise XMPPError("internal-server-error", str(resp))
         assert isinstance(resp, nio.RoomRedactResponse)
         self.events_to_ignore.add(resp.event_id)
+
+    async def presence(
+        self,
+        resource: str,
+        show: PseudoPresenceShow,
+        status: str,
+        resources: dict[str, ResourceDict],
+        merged_resource: Optional[ResourceDict],
+    ):
+        if not merged_resource:
+            resp = await self.matrix.set_presence("offline")
+        else:
+            resp = await self.matrix.set_presence(
+                PRESENCE_DICT[merged_resource["show"]],
+                merged_resource["status"] or None,
+            )
+        self.log.debug("Set presence response: %s", resp)
+
+
+PRESENCE_DICT: dict[PseudoPresenceShow, str] = {
+    "": "online",
+    "chat": "online",
+    "away": "unavailable",
+    "xa": "unavailable",
+    "dnd": "unavailable",
+}
