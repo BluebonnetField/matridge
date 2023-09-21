@@ -2,8 +2,8 @@ from typing import Union
 
 import nio
 from nio.crypto import OlmDevice, TrustState
-from slidge.core.command import Command, CommandAccess, Form, FormField, TableResult
-from slidge.core.command.base import FormValues
+from slidge.command import Command, CommandAccess, Form, FormField, TableResult
+from slidge.command.base import FormValues
 from slixmpp.exceptions import XMPPError
 
 from .group import MUC
