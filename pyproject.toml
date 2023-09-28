@@ -10,7 +10,7 @@ python = "^3.9"
 matrix-nio = {extras = ["e2e"], version = "^0.21"}
 beautifulsoup4 = "^4.12.2"
 async-lru = "^2.0.3"
-slidge-style-parser = "^0.1.1"
+slidge-style-parser = "^0.1.5"
 
 [tool.poetry.dependencies.slidge]
 git = "https://git.sr.ht/~nicoco/slidge"
@@ -27,7 +27,7 @@ ruff = "^0.0.277"
 mypy = "^1.4.1"
 isort = "^5.12.0"
 sphinx-argparse = "^0.4.0"
-sphinx-autoapi = "^2.1.1"
+sphinx-autoapi = "^3"
 sphinx-mdinclude = "^0.5.3"
 furo = "^2023.5.20"
 
