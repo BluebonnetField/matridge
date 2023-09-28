@@ -74,12 +74,8 @@ class MatrixMixin(MessageMixin):
             media_data = resp.body
             decrypted_data = nio.crypto.attachments.decrypt_attachment(
                 media_data,
-                msg.source["content"]["file"]["key"][
-                    "k"
-                ],
-                msg.source["content"]["file"]["hashes"][
-                    "sha256"
-                ],
+                msg.source["content"]["file"]["key"]["k"],
+                msg.source["content"]["file"]["hashes"]["sha256"],
                 msg.source["content"]["file"]["iv"],
             )
             return [
@@ -211,5 +207,6 @@ def get_content(text: str):
         content["formatted_body"] = formatted_body
         content["format"] = "org.matrix.custom.html"
     return content
+
 
 log = logging.getLogger()
