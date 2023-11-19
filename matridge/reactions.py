@@ -61,17 +61,17 @@ class ReactionCache:
             return
 
         for event in resp.chunk:
-            relates_to = event.source.get("content", {}).get("m.relates_to")
-            if not relates_to:
+            if not isinstance(event, nio.ReactionEvent):
                 continue
-            emoji = relates_to.get("key")
+            reacts_to = event.reacts_to
+            if not reacts_to:
+                continue
+            emoji = event.key
             if emoji:
                 target = ReactionTarget(
                     room=room,
                     sender=event.sender,
-                    event=await self.matrix.get_original_id(
-                        room, relates_to["event_id"]
-                    ),
+                    event=await self.matrix.get_original_id(room, reacts_to),
                 )
                 self._reaction_cache[target].append(
                     Reaction(event=event.event_id, emoji=emoji)

@@ -134,6 +134,7 @@ class Client(AuthenticationClient):
         self.add_event_callback(self.on_sticker, nio.StickerEvent)  # type:ignore
         self.add_event_callback(self.on_member, nio.RoomMemberEvent)  # type:ignore
         self.add_event_callback(self.on_redact, nio.RedactionEvent)  # type:ignore
+        self.add_event_callback(self.on_reaction, nio.ReactionEvent)  # type:ignore
         self.add_presence_callback(self.on_presence, nio.PresenceEvent)  # type:ignore
         self.add_ephemeral_callback(self.on_receipt, nio.ReceiptEvent)  # type:ignore
         self.add_ephemeral_callback(
@@ -208,9 +209,6 @@ class Client(AuthenticationClient):
     async def on_event(self, room: nio.MatrixRoom, event: nio.Event):
         if not config.NIO_SILENT:
             self.log.debug("Event %s '%s': %r", type(event), room, event)
-        if getattr(event, "type", None) == "m.reaction":
-            self.log.debug("Reaction")
-            await self.on_reaction(room, event)
 
     @catch_all
     async def on_message(self, room: nio.MatrixRoom, event: nio.RoomMessage):
@@ -290,15 +288,14 @@ class Client(AuthenticationClient):
                 participant.displayed(receipt.event_id)
 
     @catch_all
-    async def on_reaction(self, room: nio.MatrixRoom, event: nio.Event, **kw):
+    async def on_reaction(self, room: nio.MatrixRoom, event: nio.ReactionEvent, **kw):
         self.log.debug("Reaction2")
 
         source = event.source
-        relates = source["content"]["m.relates_to"]
-        msg_id = await self.get_original_id(room.room_id, relates["event_id"])
+        msg_id = await self.get_original_id(room.room_id, event.reacts_to)
 
         sender = source["sender"]
-        emoji = relates["key"]
+        emoji = event.key
 
         await self.reactions.add(room.room_id, msg_id, sender, emoji, event.event_id)
         reactions = await self.reactions.get(room.room_id, msg_id, sender)

@@ -20,8 +20,9 @@ class MockMatrix:
             None,
             start=None,
             chunk=[
-                nio.UnknownEvent(
-                    type="m.reaction",
+                nio.ReactionEvent(
+                    reacts_to="msg_id",
+                    key="<3",
                     source=mock_source(
                         {
                             "event_id": "1",
@@ -32,8 +33,9 @@ class MockMatrix:
                         }
                     ),
                 ),
-                nio.UnknownEvent(
-                    type="m.reaction",
+                nio.ReactionEvent(
+                    reacts_to="msg_id",
+                    key="+1",
                     source=mock_source(
                         {
                             "event_id": "2",
@@ -44,8 +46,9 @@ class MockMatrix:
                         }
                     ),
                 ),
-                nio.UnknownEvent(
-                    type="m.reaction",
+                nio.ReactionEvent(
+                    reacts_to="other_msg_id",
+                    key="-1",
                     source=mock_source(
                         {
                             "event_id": "3",
