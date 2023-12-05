@@ -159,7 +159,14 @@ class Client(AuthenticationClient):
                 else:
                     attempts = 0
                     wait = self.MIN_RETRY_TIME
-                self.log.error("Sync task has raised %s, retrying in %s", e, wait)
+                if attempts < 2:
+                    self.log.debug(
+                        "Sync task has raised %r, retrying in %s", e, wait, exc_info=e
+                    )
+                else:
+                    self.log.error(
+                        "Sync task has raised %r, retrying in %s", e, wait, exc_info=e
+                    )
                 await sleep(wait)
             else:
                 break
