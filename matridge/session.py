@@ -247,6 +247,24 @@ class Session(BaseSession[str, Recipient]):
             )
         self.log.debug("Set presence response: %s", resp)
 
+    async def on_avatar(
+        self,
+        bytes_: Optional[bytes],
+        hash_: Optional[str],
+        type_: Optional[str],
+        width: Optional[int],
+        height: Optional[int],
+    ) -> None:
+        if bytes_:
+            resp, _ = await self.matrix.upload(io.BytesIO(bytes_), type_)
+            self.log.debug("Upload response: %s %r", type(resp), resp)
+            if not isinstance(resp, nio.UploadResponse):
+                raise XMPPError("internal-server-error", str(resp))
+            uri = resp.content_uri
+        else:
+            uri = ""
+        await self.matrix.set_avatar(uri)
+
 
 PRESENCE_DICT: dict[PseudoPresenceShow, str] = {
     "": "online",
