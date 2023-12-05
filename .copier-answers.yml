@@ -1,5 +1,5 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
-_commit: ae31af1
+_commit: d5866b9
 _src_path: git+https://git.sr.ht/~nicoco/slidge-template
 author: Nicoco
 author_email: nicoco@nicoco.fr
@@ -48,8 +48,13 @@ xeps:
         and converted.
     number: 393
     status: partial
--   note: Matrix's redacted events are mapped to that.
+-   note: Matrix's redacted events are mapped to retraction when the sender and the
+        redacter match.
     number: 424
+    status: complete
+-   note: Matrix's redacted events are mapped to retraction when the sender and the
+        redacter do not match.
+    number: 425
     status: complete
 -   note: null
     number: 444
