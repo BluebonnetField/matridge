@@ -87,18 +87,16 @@ class MUC(LegacyMUC[str, str, Participant, str]):
             self.KEEP_BACKFILLED_PARTICIPANTS = True
 
         for user_id, user in list(room.users.items()):
-            if user_id == self.session.matrix.user_id:
-                self.log.debug(
-                    "Skipping: %s %s", user.user_id, self.session.matrix.user_id
-                )
-                continue
             power_level = power_levels.get(user_id, 0)
-            if power_level < 50 and i > config.MAX_PARTICIPANTS_FETCH:
-                continue
-            try:
-                p = await self.get_participant_by_legacy_id(user.user_id)
-            except XMPPError:
-                continue
+            if user_id == self.session.matrix.user_id:
+                p = await self.get_user_participant()
+            else:
+                if power_level < 50 and i > config.MAX_PARTICIPANTS_FETCH:
+                    continue
+                try:
+                    p = await self.get_participant_by_legacy_id(user.user_id)
+                except XMPPError:
+                    continue
             if power_level == 100:
                 p.affiliation = "owner"
                 p.role = "moderator"
