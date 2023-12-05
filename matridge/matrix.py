@@ -313,16 +313,21 @@ class Client(AuthenticationClient):
     @catch_all
     async def on_redact(self, room: nio.MatrixRoom, event: nio.RedactionEvent):
         self.log.debug("Redaction: %s", event)
-        participant = await self.get_participant(room, event)
+        redacter = await self.get_participant(room, event)
         if reaction_target := self.reactions.remove(event.redacts):
             msg_id = await self.get_original_id(room.room_id, reaction_target.event)
             reactions = await self.reactions.get(
                 reaction_target.room, msg_id, reaction_target.sender
             )
-            participant.react(msg_id, reactions)
+            redacter.react(msg_id, reactions)
             return
 
-        participant.moderate(event.redacts, reason=event.reason)
+        redacted_event = await self.get_event(room.room_id, event.redacts)
+
+        if redacted_event and event.sender == redacted_event.sender:
+            redacter.retract(event.redacts)
+        else:
+            redacter.moderate(event.redacts, event.reason)
 
     @alru_cache(maxsize=1000)
     async def get_original_id(self, room_id: str, event_id: str) -> str:
