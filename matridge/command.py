@@ -74,7 +74,7 @@ class ManageTrust(Command):
     HUMAN_STATES = {0: "unset", 1: "verified", 2: "blacklisted", 3: "ignored"}
 
     def __human_device(self, d: OlmDevice, state=True):
-        r = f"{d.display_name} of {d.user_id}"
+        r = f"{d.ed25519} of {d.user_id}"
         if state:
             return r + f" ({self.HUMAN_STATES[d.trust_state.value]})"
         return r
