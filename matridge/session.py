@@ -18,6 +18,8 @@ from .group import MUC, Bookmarks, Participant
 from .matrix import Client
 from .util import get_content
 
+from . import config
+
 Sender = Union[Contact, Participant]
 Recipient = Union[MUC, Contact]
 
@@ -90,6 +92,7 @@ class Session(BaseSession[str, Recipient]):
             chat.legacy_id,
             message_type=message_type,
             content=content,
+            ignore_unverified_devices=config.TRUST_EVERYTHING,
         )
         return await self.__handle_response(response)
 

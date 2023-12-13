@@ -30,3 +30,6 @@ _underline_
 ||spoiler
 \\_escape style_
 """
+
+TRUST_EVERYTHING = False
+TRUST_EVERYTHING__DOC = "Always trust new encryption keys. This is unsafe if you need perfect bridge to end encryption."
