@@ -61,7 +61,7 @@ class MUC(LegacyMUC[str, str, Participant, str]):
         part.is_user = True
 
         self.log.debug("User nick: %s", self.user_nick)
-        self.name = room.name or "unnamed"
+        self.name = room.display_name
         self.log.debug("Avatar: %s", room.room_avatar_url)
         self.n_participants = room.member_count
         self.subject = room.topic

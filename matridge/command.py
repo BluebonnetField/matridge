@@ -34,7 +34,7 @@ class ListSpaces(Command):
                     label="Matrix space",
                     type="list-single",
                     options=[
-                        {"label": room.name or "unnamed", "value": str(i)}
+                        {"label": room.display_name, "value": str(i)}
                         for i, room in enumerate(spaces)
                     ],
                 )
@@ -59,7 +59,7 @@ class ListSpaces(Command):
         mucs = sorted(mucs, key=lambda muc: muc.name)
         return TableResult(
             fields=[FormField("name"), FormField("jid", type="jid-single")],
-            description=f"Rooms of '{space.name or 'unnamed'}'",
+            description=f"Rooms of '{space.display_name}'",
             jids_are_mucs=True,
             items=[{"name": muc.name, "jid": str(muc.jid)} for muc in mucs],
         )
