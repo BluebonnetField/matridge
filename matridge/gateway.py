@@ -31,6 +31,10 @@ class Gateway(BaseGateway):
 
     ROSTER_GROUP: str = "matrix"
 
+    SEARCH_FIELDS = [
+        FormField(var="mxid"),
+    ]
+
     MARK_ALL_MESSAGES = False
 
     PROPER_RECEIPTS = True

@@ -3,7 +3,7 @@ from typing import Any, Optional, Union
 
 import aiohttp
 import nio
-from slidge import BaseSession, SearchResult
+from slidge import BaseSession, FormField, SearchResult
 from slidge.util.types import (
     LegacyMessageType,
     LegacyThreadType,
@@ -181,7 +181,58 @@ class Session(BaseSession[str, Recipient]):
 
     @no_dm
     async def search(self, form_values: dict[str, str]) -> Optional[SearchResult]:
-        pass
+        mxid = form_values.get("mxid")
+        if mxid is None:
+            raise XMPPError("bad-request", "Please enter a matrix id")
+
+        legacy_id = None
+        if mxid.startswith("@"):
+            legacy_id = await self.find_direct_room(mxid)
+
+        if mxid.startswith("#") or mxid.startswith("!"):
+            legacy_id = await self.join_group(mxid)
+
+        if legacy_id:
+            group = await self.bookmarks.by_legacy_id(legacy_id)
+            return SearchResult(
+                fields=[FormField("mxid"), FormField("jid", type="jid-single")],
+                items=[{"mxid": mxid, "jid": group.jid.bare}],
+            )
+
+        raise XMPPError("bad-request", "This does not look like a valid matrix id")
+
+    async def find_direct_room(self, mxid: str) -> Optional[str]:
+        response = await self.matrix.list_direct_rooms()
+        if isinstance(response, nio.responses.DirectRoomsErrorResponse):
+            self.log.warning(response)
+            if response.status_code:
+                raise XMPPError(
+                    "bad-request", f"Something went wrong: {response.message}"
+                )
+
+            return await self.open_direct_message(mxid)
+
+        self.log.warning(response.rooms[mxid])
+        if response.rooms[mxid]:
+            return response.rooms[mxid][0]
+
+        return await self.open_direct_message(mxid)
+
+    async def open_direct_message(self, mxid: str) -> Optional[str]:
+        response = await self.matrix.room_create(
+            invite=[mxid], is_direct=True, power_level_override={"invite": 50}
+        )
+        if isinstance(response, nio.responses.RoomCreateResponse):
+            return response.room_id
+
+        raise XMPPError("bad-request", f"Something went wrong: {response.message}")
+
+    async def join_group(self, mxid: str) -> Optional[str]:
+        response = await self.matrix.join(mxid)
+        if isinstance(response, nio.responses.JoinResponse):
+            return response.room_id
+
+        raise XMPPError("bad-request", f"Something went wrong: {response.message}")
 
     @no_dm
     async def react(
